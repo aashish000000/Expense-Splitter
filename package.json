@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "description": "final project",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "aashish-joshi",
   "license": "MIT",
   "dependencies": {
-    "bcrypt": "^6.0.0",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "nedb-promises": "^6.2.3",
-    "uuid": "^11.1.0",
-    "ws": "^8.18.2"
-  }
+      "bcrypt": "^6.0.0",
+      "cors": "^2.8.5",
+      "express": "^5.1.0",
+      "nedb-promises": "^6.2.3",
+      "uuid": "^11.1.0",
+      "ws": "^8.18.2"
+    },
+    "scripts": {
+      "start": "node index.js"
+    }
 }
