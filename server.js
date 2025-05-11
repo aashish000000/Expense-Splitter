@@ -20,8 +20,8 @@ app.use(cors(corsOptions));          // adds the CORS headers to every reply
 app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+app.get('/{*splat}', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
 
