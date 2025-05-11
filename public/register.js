@@ -16,7 +16,7 @@ document.querySelector('form').addEventListener('submit', async function(event) 
     }
 
     try {
-        const response = await fetch(`/api/register`, {
+        const response = await fetch(`/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
