@@ -4,7 +4,7 @@
 const express = require('express');
 const cors = require('cors');
 const corsOptions = {
-  origin: 'https://expense-splitter-br477lj8k-aashish000000s-projects.vercel.app', // Replace with your frontend's URL
+  origin: 'https://expense-splitter-tau.vercel.app/', // Replace with your frontend's URL
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };

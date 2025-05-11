@@ -1,5 +1,5 @@
 // const API_BASE_URL = 'http://localhost:3000';
-const API_BASE_URL = 'https://expense-splitter-br477lj8k-aashish000000s-projects.vercel.app';
+const API_BASE_URL = 'https://expense-splitter-tau.vercel.app';
 
 document.querySelector('form').addEventListener('submit', async function(event) {
     event.preventDefault(); // Prevent the default form submission
@@ -16,7 +16,7 @@ document.querySelector('form').addEventListener('submit', async function(event) 
     }
 
     try {
-        const response = await fetch(`/register`, {
+        const response = await fetch(`${API_BASE_URL}/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
