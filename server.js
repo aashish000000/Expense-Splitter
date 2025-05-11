@@ -17,10 +17,9 @@ const path = require('path');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-
-// Serve static files from the public folder
+app.use(cors(corsOptions));          // adds the CORS headers to every reply
+app.options('*', cors(corsOptions));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
 app.use(express.json());
 
 // Fallback to index.html for any unknown routes
@@ -33,7 +32,6 @@ app.listen(PORT, () => {
 });
 
 
-app.options('*', cors(corsOptions)); 
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const Datastore = require('nedb-promises');
