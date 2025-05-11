@@ -19,9 +19,13 @@ const PORT = process.env.PORT || 3000;
 app.use(cors(corsOptions));          // adds the CORS headers to every reply
 app.options('*', cors(corsOptions));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+const PUBLIC_DIR = __dirname;          // <- key change
+
+app.use(express.static(PUBLIC_DIR));
+
+// Express 5 needs a *named* wildcard:
+app.get('/*splat', (_, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
 
