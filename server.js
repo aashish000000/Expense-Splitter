@@ -1,113 +1,210 @@
 const express = require('express');
-const cors = require('cors'); // Import the cors package
-const { v4: uuidv4 } = require('uuid'); // Import the uuid package
+const cors = require('cors');
+const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcrypt');
+const Datastore = require('nedb-promises');
 
-// Create an instance of an Express application
+const db = Datastore.create({ filename: 'mydb.jsonl', autoload: true });
+
 const app = express();
-
-// Enable CORS with origin *
 app.use(cors());
-
-// Middleware to parse JSON requests
 app.use(express.json());
+const PORT = process.env.PORT || 3000;
 
-// Define a port for the server to listen on
-const PORT = 3000;
 
-// Mock database (in-memory for simplicity)
-const users = [];
-const groups = []; // Mock database for groups
+const findUserByEmail = (email) => db.findOne({ collection: 'users', email });
+const findUserByUsername = (username) => db.findOne({ collection: 'users', username });
+const findGroupByName = (name) => db.findOne({ collection: 'groups', name });
+const findGroupById   = (id)   => db.findOne({ collection: 'groups', id });
 
-// Register endpoint
-app.post('/register', (req, res) => {
+//------------------------------------------------------
+// Authentication routes
+//------------------------------------------------------
+app.post('/register', async (req, res) => {
+  try {
     const { username, email, password } = req.body;
-
-    // Check if user already exists
-    const userExists = users.find(user => user.email === email);
-    if (userExists) {
-        return res.status(400).json({ message: 'User already exists' });
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Generate a unique ID for the new user
+    const existing = await findUserByEmail(email);
+    if (existing) return res.status(400).json({ message: 'User already exists' });
+
+    const hashpassword = await bcrypt.hash(password, 10);
     const userId = uuidv4();
 
-    // Add new user to the mock database
-    users.push({ id: userId, username, email, password });
-
+    await db.insert({ collection: 'users', id: userId, username, email, hashpassword });
     res.status(201).json({ message: 'User registered successfully', userId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
-// Login endpoint
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
+  try {
     const { username, password } = req.body;
+    const user = await findUserByUsername(username);
+    if (!user) return res.status(401).json({ message: 'User not found' });
 
-    // Check if user exists and password matches
-    const user = users.find(user => user.username === username && user.password === password);
-    if (!user) {
-        return res.status(401).json({ message: 'Invalid email or password' });
-    }
+    const valid = await bcrypt.compare(password, user.hashpassword);
+    if (!valid) return res.status(401).json({ message: 'Invalid password' });
 
-    res.status(200).json({ message: 'Login successful', user: user });
+    res.status(200).json({ message: 'Login successful', user });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
-// Create a group endpoint
-app.post('/groups/create', (req, res) => {
+//------------------------------------------------------
+// Group routes
+//------------------------------------------------------
+app.post('/groups/create', async (req, res) => {
+  try {
     const { name, userId } = req.body;
+    if (!name || !userId) return res.status(400).json({ message: 'Group name and userId required' });
 
-    // Check if group already exists
-    const groupExists = groups.find(group => group.name === name);
-    if (groupExists) {
-        return res.status(400).json({ message: 'Group already exists' });
-    }
+    const exists = await findGroupByName(name);
+    if (exists) return res.status(400).json({ message: 'Group already exists' });
 
-    // Add new group to the mock database with an empty user list
-    const newGroup = { id: groups.length + 1, name, users: [userId] };
-    groups.push(newGroup);
-
+    const newGroup = {
+      collection: 'groups',
+      id: uuidv4(),
+      name,
+      users: [userId],
+      balances: {},
+      expenses: []
+    };
+    await db.insert(newGroup);
     res.status(201).json({ message: 'Group created successfully', group: newGroup });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
-// Join a group endpoint
-app.post('/groups/join', (req, res) => {
-    const { code, userId } = req.body;
+app.post('/groups/join', async (req, res) => {
+  try {
+    const { code, userId } = req.body; // `code` is the group name/identifier
+    const group = await findGroupByName(code);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
 
-    // Find the group by ID (assuming code is the group ID)
-    const group = groups.find(group => group.name === code);
-    if (!group) {
-        return res.status(404).json({ message: 'Group not found' });
-    }
-
-    // Add the user ID to the group's user list if not already added
     if (!group.users.includes(userId)) {
-        group.users.push(userId);
+      group.users.push(userId);
+      await db.update({ _id: group._id }, group);
     }
 
     res.status(200).json({ message: 'Successfully joined the group', group });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
-// Load groups for a user endpoint
-app.get('/api/loadmygroup', (req, res) => {
+app.get('/api/loadmygroup', async (req, res) => {
+  try {
     const { id: userId } = req.query;
+    if (!userId) return res.status(400).json({ message: 'User ID is required' });
 
-    // Validate user ID
-    if (!userId) {
-        return res.status(400).json({ message: 'User ID is required' });
+    const userGroups = await db.find({ collection: 'groups', users: userId });
+    const details = userGroups.map(g => ({ id: g.id, name: g.name }));
+    res.status(200).json(details);
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get('/api/groups/:groupId/users', async (req, res) => {
+  try {
+    const group = await findGroupById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+
+    const usersDocs = await db.find({ collection: 'users', id: { $in: group.users } });
+    const userDetails = usersDocs.map(u => ({ username: u.username, balance: group.balances[u.id] || 0 }));
+
+    res.status(200).json({ users: userDetails });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/groups/:groupId/expenses', async (req, res) => {
+  try {
+    const { name, amount } = req.body;
+    const group = await findGroupById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    if (!name || !amount) return res.status(400).json({ message: 'Expense name and amount are required' });
+
+    const expense = { id: uuidv4(), name, amount: parseFloat(amount) };
+    group.expenses.push(expense);
+
+    const share = expense.amount / group.users.length;
+    group.users.forEach(uid => {
+      group.balances[uid] = (group.balances[uid] || 0) + share;
+    });
+
+    await db.update({ _id: group._id }, group);
+    res.status(201).json({ message: 'Expense added successfully', expense, balances: group.balances });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get('/groups/:groupId/expenses', async (req, res) => {
+  try {
+    const group = await findGroupById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    res.status(200).json({ expenses: group.expenses });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch('/groups/:groupId/paid', async (req, res) => {
+  try {
+    const { uid } = req.body;
+    const group = await findGroupById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    if (!group.users.includes(uid)) return res.status(400).json({ message: 'User is not a member of this group' });
+
+    group.balances[uid] = 0;
+    await db.update({ _id: group._id }, group);
+    res.status(200).json({ message: 'Payment status updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete('/groups/:groupId', async (req, res) => {
+  try {
+    const removed = await db.remove({ collection: 'groups', id: req.params.groupId }, {});
+    if (!removed) return res.status(404).json({ message: 'Group not found' });
+    res.status(200).json({ message: 'Group deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch('/groupdelete/:groupId', async (req, res) => {
+  try {
+    const { newName } = req.body;
+    if (!newName) return res.status(400).json({ message: 'New group name is required' });
+
+    const exists = await findGroupByName(newName);
+    if (exists && exists.id !== req.params.groupId) {
+      return res.status(400).json({ message: 'Group name already exists' });
     }
 
-    // Find groups the user belongs to
-    const userGroups = groups.filter(group => group.users.includes(userId));
-
-    // Extract group IDs and names
-    const groupDetails = userGroups.map(group => ({
-        id: group.id,
-        name: group.name
-    }));
-
-    res.status(200).json(groupDetails);
+    const updated = await db.update({ collection: 'groups', id: req.params.groupId }, { $set: { name: newName } });
+    if (!updated) return res.status(404).json({ message: 'Group not found' });
+    res.status(200).json({ message: 'Group name updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
-
-// Start the server
+//------------------------------------------------------
+// Static assets & server start
+//------------------------------------------------------
+app.use(express.static('public'));
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

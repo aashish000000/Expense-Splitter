@@ -9,8 +9,10 @@
   "author": "aashish-joshi",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "nedb-promises": "^6.2.3",
     "uuid": "^11.1.0"
   }
 }

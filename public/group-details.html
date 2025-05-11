@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Group Details</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --text: #1f2937;
+      --border: #e5e7eb;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2, h3 {
+      color: var(--primary-dark);
+    }
+
+    #gname {
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 16px;
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.3s ease;
+      margin: 5px 0;
+    }
+
+    button:hover {
+      background-color: var(--primary-dark);
+    }
+
+    #deleteExpenseButton {
+      background-color: #ef4444;
+    }
+
+    #deleteExpenseButton:hover {
+      background-color: #b91c1c;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #users li, #expensesList li {
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      transition: transform 0.2s ease;
+    }
+
+    #users li:hover, #expensesList li:hover {
+      transform: translateY(-2px);
+    }
+
+    .form-container input {
+      padding: 10px;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+
+    .form-container {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+  <h1>Group Details</h1>
+  <h1 id="gname">Group Name</h1>
+  <button id="edit-btn">Edit</button>
+  <button id="deleteExpenseButton">Delete Group</button>
+
+  <div class="card">
+    <h2>Users</h2>
+    <ul id="users"></ul>
+  </div>
+
+  <div class="card form-container">
+    <h3>Add Expense</h3>
+    <input type="text" id="expenseName" placeholder="Expense Name" required>
+    <input type="number" id="expenseAmount" placeholder="Amount" required>
+    <button id="addExpenseButton">Add Expense</button>
+    <button id="iPaidButton">I Paid</button>
+  </div>
+
+  <div class="card">
+    <h3>Expenses</h3>
+    <ul id="expensesList"></ul>
+  </div>
+
+  <script src="groupdetail.js"></script>
+</body>
+</html>
