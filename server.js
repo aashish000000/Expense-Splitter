@@ -17,10 +17,7 @@ const db = Datastore.create({ filename: 'mydb.jsonl', autoload: true });
 //------------------------------------------------------
 // Express setup
 //------------------------------------------------------
-const app = express();
-app.use(cors());
-app.use(express.json());
-const PORT = process.env.PORT || 3000;
+
 
 //------------------------------------------------------
 // Helper DB lookups
@@ -217,69 +214,22 @@ app.patch('/groupdelete/:groupId', async (req, res) => {
 //------------------------------------------------------
 // Static assets
 //------------------------------------------------------
-app.use(express.static('public'));
+const express = require('express');
+const path = require('path');
+const app = express();
 
-//------------------------------------------------------
-// HTTP server so WebSocket can share the same port
-//------------------------------------------------------
-const server = http.createServer(app);
+const PORT = process.env.PORT || 3000;
 
-//------------------------------------------------------
-// WebSocket setup (shares same HTTP server)
-//------------------------------------------------------
-// Connect using: ws://HOST:PORT/ws/<groupId>
-//------------------------------------------------------
-const wss = new WebSocket.Server({ server });
+// Serve static files from the public folder
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
+app.use(express.json());
 
-const groupSockets = new Map(); // Map<groupId, Set<ws>>
-
-wss.on('connection', (ws, req) => {
-  // Extract the group ID from the URL
-  const urlParts = req.url.split('/');
-  const groupId = urlParts[urlParts.length - 1];
-  if (!groupId) {
-    ws.close(1008, 'Group ID is required in URL');
-    return;
-  }
-
-  // Track sockets per group
-  if (!groupSockets.has(groupId)) groupSockets.set(groupId, new Set());
-  groupSockets.get(groupId).add(ws);
-
-  // Broadcast helper
-  const broadcastToGroup = (msgObj) => {
-    const peers = groupSockets.get(groupId) || new Set();
-    const data = JSON.stringify(msgObj);
-    peers.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) client.send(data);
-    });
-  };
-
-  // Incoming messages
-  ws.on('message', (raw) => {
-    let msg;
-    try {
-      msg = JSON.parse(raw);
-    } catch (_) {
-      return; // Ignore malformed JSON
-    }
-    // Echo message to everyone in the same group
-    broadcastToGroup(msg);
-  });
-
-  // Remove closed sockets
-  ws.on('close', () => {
-    const set = groupSockets.get(groupId);
-    if (set) {
-      set.delete(ws);
-      if (set.size === 0) groupSockets.delete(groupId);
-    }
-  });
+// Fallback to index.html for any unknown routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-//------------------------------------------------------
-// Start the combined server
-//------------------------------------------------------
-server.listen(PORT, () => {
-  console.log(`HTTP & WebSocket server running on http://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
