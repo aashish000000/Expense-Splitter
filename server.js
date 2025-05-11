@@ -3,6 +3,14 @@
 
 const express = require('express');
 const cors = require('cors');
+const corsOptions = {
+  origin: 'https://expense-splitter-br477lj8k-aashish000000s-projects.vercel.app', // Replace with your frontend's URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // If cookies or Authorization headers are used
+};
+
+app.use(cors(corsOptions));
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const Datastore = require('nedb-promises');
