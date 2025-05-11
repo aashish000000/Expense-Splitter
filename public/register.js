@@ -1,3 +1,6 @@
+// const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://expense-splitter-br477lj8k-aashish000000s-projects.vercel.app';
+
 document.querySelector('form').addEventListener('submit', async function(event) {
     event.preventDefault(); // Prevent the default form submission
 
@@ -11,10 +14,9 @@ document.querySelector('form').addEventListener('submit', async function(event) 
         alert('Passwords do not match!');
         return;
     }
-    // ya nera register.js le front end bata data liyera backend ma api call garxa ane account created vaye paxi login.html ma pathauxa
 
     try {
-        const response = await fetch('http://localhost:3000/register', {
+        const response = await fetch(`${API_BASE_URL}/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -32,6 +34,5 @@ document.querySelector('form').addEventListener('submit', async function(event) 
         }
     } catch (err) {
         console.error('Error:', err);
-        alert('An error occurred. Please try again.');
     }
 });

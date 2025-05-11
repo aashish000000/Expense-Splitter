@@ -13,8 +13,8 @@ const createGroupBtn = document.getElementById('create-group-btn');
 const joinGroupBtn = document.getElementById('join-group-btn');
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:3000';
-
+//const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://expense-splitter-br477lj8k-aashish000000s-projects.vercel.app';
 //yo function le group haru ko list load garxa ani group haru ko name dekhaunxa
 async function loadGroups() {
     try {
