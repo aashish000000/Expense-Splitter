@@ -7,10 +7,33 @@ const corsOptions = {
   origin: 'https://expense-splitter-br477lj8k-aashish000000s-projects.vercel.app', // Replace with your frontend's URL
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // If cookies or Authorization headers are used
 };
 
-app.use(cors(corsOptions));
+//------------------------------------------------------
+// Static assets
+//------------------------------------------------------
+const express = require('express');
+const path = require('path');
+const app = express();
+
+const PORT = process.env.PORT || 3000;
+
+// Serve static files from the public folder
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
+app.use(express.json());
+
+// Fallback to index.html for any unknown routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+
+app.options('*', cors(corsOptions)); 
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const Datastore = require('nedb-promises');
@@ -219,25 +242,3 @@ app.patch('/groupdelete/:groupId', async (req, res) => {
   }
 });
 
-//------------------------------------------------------
-// Static assets
-//------------------------------------------------------
-const express = require('express');
-const path = require('path');
-const app = express();
-
-const PORT = process.env.PORT || 3000;
-
-// Serve static files from the public folder
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
-app.use(express.json());
-
-// Fallback to index.html for any unknown routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
