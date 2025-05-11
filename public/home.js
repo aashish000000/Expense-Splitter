@@ -127,6 +127,7 @@ joinGroupBtn.addEventListener('click', async () => {
         if (response.ok) {
             const data = await response.json();
             alert(`Successfully joined group "${data.group.name}"!`);
+            window.location.reload();
             // Optionally, update the UI
         } else {
             const error = await response.json();

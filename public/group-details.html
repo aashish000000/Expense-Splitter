@@ -116,8 +116,22 @@
   </div>
 
   <div class="card">
-    <h3>Expenses</h3>
-    <ul id="expensesList"></ul>
+      <h3>Expenses</h3>
+      <ul id="expensesList"></ul>
+  </div>
+  
+  <!-- Chat Button -->
+  <button id="chatButton" class="chat-button">💬 Chat</button>
+  
+  <!-- Chat Modal -->
+  <div id="chatModal" class="chat-modal">
+      <div class="chat-modal-content">
+          <span id="closeChatModal" class="close">&times;</span>
+          <h3>Group Chat</h3>
+          <div id="chatMessages" class="chat-messages"></div>
+          <input type="text" id="chatInput" placeholder="Type a message..." />
+          <button id="sendChatButton">Send</button>
+      </div>
   </div>
 
   <script src="groupdetail.js"></script>

@@ -11,15 +11,10 @@ Acheived
         patch 
         Display the individual expense  
         db
-
-left to do
-
-        
-        
-       
-
         PWA
 
+
+left to do
 
         Deploying in the web server
 

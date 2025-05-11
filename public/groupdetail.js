@@ -203,4 +203,70 @@ document.getElementById('edit-btn').addEventListener('click', function () {
             });
     });
 });
-// Call listExpenses when the page loads
+/* ---------- 1.  Grab query-string params ---------- */
+const params     = new URLSearchParams(window.location.search);
+const groupName  = params.get('groupName');
+
+/* Guard against missing groupId */
+if (!groupId) {
+  alert('Missing groupId in URL');
+  throw new Error('groupId required');
+}
+
+/* ---------- 2.  Build the correct WebSocket URL ---------- */
+const isSecure   = location.protocol === 'https:';
+const wsScheme   = isSecure ? 'wss:' : 'ws:';
+
+// If page is opened via file://, location.host === ''  ➜ default to localhost:3000
+const backendHost = location.host || 'localhost:3000';
+
+const socketUrl = `${wsScheme}//${backendHost}/ws/${groupId}`;
+const socket    = new WebSocket(socketUrl);
+
+/* ---------- 3.  DOM refs ---------- */
+const chatButton     = document.getElementById('chatButton');
+const chatModal      = document.getElementById('chatModal');
+const closeChatModal = document.getElementById('closeChatModal');
+const chatMessages   = document.getElementById('chatMessages');
+const chatInput      = document.getElementById('chatInput');
+const sendChatButton = document.getElementById('sendChatButton');
+
+/* ---------- 4.  Modal open/close ---------- */
+chatButton.addEventListener('click', () => {
+  chatModal.style.display = 'block';
+  chatInput.focus();
+});
+closeChatModal.addEventListener('click', () => {
+  chatModal.style.display = 'none';
+});
+
+/* ---------- 5.  Incoming messages ---------- */
+socket.onmessage = (event) => {
+  try {
+    const { user, text } = JSON.parse(event.data);
+    const div = document.createElement('div');
+    div.textContent = `${user}: ${text}`;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  } catch (err) {
+    console.error('Invalid WS payload', err);
+  }
+};
+
+/* ---------- 6.  Send message ---------- */
+sendChatButton.addEventListener('click', sendChat);
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendChat();
+});
+
+function sendChat() {
+  const text = chatInput.value.trim();
+  var currentUsername = loggedInUser?.username;
+  if (!text) return;
+  socket.send(JSON.stringify({ user: currentUsername, text })); // set currentUsername earlier at login
+  chatInput.value = '';
+}
+
+/* ---------- 7.  Cleanup ---------- */
+window.addEventListener('beforeunload', () => socket.close());
+

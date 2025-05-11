@@ -1,21 +1,34 @@
+// server.js
+// Combined Express + WebSocket (same port)
+
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const Datastore = require('nedb-promises');
+const WebSocket = require('ws');
+const http = require('http');
 
+//------------------------------------------------------
+// Database setup
+//------------------------------------------------------
 const db = Datastore.create({ filename: 'mydb.jsonl', autoload: true });
 
+//------------------------------------------------------
+// Express setup
+//------------------------------------------------------
 const app = express();
 app.use(cors());
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
-
-const findUserByEmail = (email) => db.findOne({ collection: 'users', email });
-const findUserByUsername = (username) => db.findOne({ collection: 'users', username });
-const findGroupByName = (name) => db.findOne({ collection: 'groups', name });
-const findGroupById   = (id)   => db.findOne({ collection: 'groups', id });
+//------------------------------------------------------
+// Helper DB lookups
+//------------------------------------------------------
+const findUserByEmail    = (email)    => db.findOne({ collection: 'users',  email });
+const findUserByUsername = (username) => db.findOne({ collection: 'users',  username });
+const findGroupByName    = (name)     => db.findOne({ collection: 'groups', name });
+const findGroupById      = (id)       => db.findOne({ collection: 'groups', id });
 
 //------------------------------------------------------
 // Authentication routes
@@ -202,9 +215,71 @@ app.patch('/groupdelete/:groupId', async (req, res) => {
 });
 
 //------------------------------------------------------
-// Static assets & server start
+// Static assets
 //------------------------------------------------------
 app.use(express.static('public'));
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+
+//------------------------------------------------------
+// HTTP server so WebSocket can share the same port
+//------------------------------------------------------
+const server = http.createServer(app);
+
+//------------------------------------------------------
+// WebSocket setup (shares same HTTP server)
+//------------------------------------------------------
+// Connect using: ws://HOST:PORT/ws/<groupId>
+//------------------------------------------------------
+const wss = new WebSocket.Server({ server });
+
+const groupSockets = new Map(); // Map<groupId, Set<ws>>
+
+wss.on('connection', (ws, req) => {
+  // Extract the group ID from the URL
+  const urlParts = req.url.split('/');
+  const groupId = urlParts[urlParts.length - 1];
+  if (!groupId) {
+    ws.close(1008, 'Group ID is required in URL');
+    return;
+  }
+
+  // Track sockets per group
+  if (!groupSockets.has(groupId)) groupSockets.set(groupId, new Set());
+  groupSockets.get(groupId).add(ws);
+
+  // Broadcast helper
+  const broadcastToGroup = (msgObj) => {
+    const peers = groupSockets.get(groupId) || new Set();
+    const data = JSON.stringify(msgObj);
+    peers.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) client.send(data);
+    });
+  };
+
+  // Incoming messages
+  ws.on('message', (raw) => {
+    let msg;
+    try {
+      msg = JSON.parse(raw);
+    } catch (_) {
+      return; // Ignore malformed JSON
+    }
+    // Echo message to everyone in the same group
+    broadcastToGroup(msg);
+  });
+
+  // Remove closed sockets
+  ws.on('close', () => {
+    const set = groupSockets.get(groupId);
+    if (set) {
+      set.delete(ws);
+      if (set.size === 0) groupSockets.delete(groupId);
+    }
+  });
+});
+
+//------------------------------------------------------
+// Start the combined server
+//------------------------------------------------------
+server.listen(PORT, () => {
+  console.log(`HTTP & WebSocket server running on http://localhost:${PORT}`);
 });
