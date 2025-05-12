@@ -39,7 +39,8 @@
 			border-radius: 4px;
 		}
 		.login-btn {
-			width: 100%;
+			margin: auto;
+			width: 50%;
 			padding: 10px;
 			background-color: #007bff;
 			color: #fff;
@@ -50,12 +51,15 @@
 		.login-btn:hover {
 			background-color: #0056b3;
 		}
+		.form-container{
+			max-width: 90%;
+		}
 	</style>
 </head>
 <body>
 	<div class="login-container">
 		<h2>Login</h2>
-		<form action="/login" method="POST">
+		<form action="/login" method="POST" class="form-container">
 			<div class="form-group">
 				<label for="username">Username</label>
 				<input type="text" id="username" name="username" required>

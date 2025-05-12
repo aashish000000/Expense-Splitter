@@ -27,7 +27,7 @@
     }
 
     #gname {
-      margin-bottom: 10px;
+      margin: 0px !important;
     }
 
     button {
@@ -46,13 +46,6 @@
       background-color: var(--primary-dark);
     }
 
-    #deleteExpenseButton {
-      background-color: #ef4444;
-    }
-
-    #deleteExpenseButton:hover {
-      background-color: #b91c1c;
-    }
 
     .card {
       background-color: var(--card-bg);
@@ -94,13 +87,38 @@
       display: flex;
       flex-direction: column;
     }
+    .main-div{
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      @media screen and (min-width: 768px) {
+        width: 50%;      
+      }
+    }
+    #edit-btn, #deleteExpenseButton{
+      cursor: pointer;
+      
+    }
+    #edit-btn:hover, #deleteExpenseButton:hover{
+      transform: scale(1.1);
+    }
+    .group-div{
+      display: flex;
+      gap: 1rem;
+      align-items:  center;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
+  <div class = "main-div">
   <h1>Group Details</h1>
+  <div class="group-div">
   <h1 id="gname">Group Name</h1>
-  <button id="edit-btn">Edit</button>
-  <button id="deleteExpenseButton">Delete Group</button>
+    <img src="./img/edit.svg" id = "edit-btn" width="32px" height="32px" title="Edit" />
+    <img src="./img/delete.svg" id = "deleteExpenseButton" width="32px" height="32px"  title="Delete"/>
+  </div>
 
   <div class="card">
     <h2>Users</h2>
@@ -135,5 +153,6 @@
   </div>
 
   <script src="groupdetail.js"></script>
+</div>
 </body>
 </html>

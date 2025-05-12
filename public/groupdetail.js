@@ -1,6 +1,4 @@
-// API_BASE_URL = 'http://localhost:3000'; 
-const API_BASE_URL = 'https://expense-splitter-br477lj8k-aashish000000s-projects.vercel.app';
-
+const API_BASE_URL = 'http://localhost:3000';
 
 function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -220,7 +218,7 @@ const isSecure   = location.protocol === 'https:';
 const wsScheme   = isSecure ? 'wss:' : 'ws:';
 
 // If page is opened via file://, location.host === ''  ➜ default to localhost:3000
-const backendHost = API_BASE_URL;
+const backendHost = location.host || 'localhost:3000';
 
 const socketUrl = `${wsScheme}//${backendHost}/ws/${groupId}`;
 const socket    = new WebSocket(socketUrl);

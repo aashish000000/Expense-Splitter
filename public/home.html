@@ -5,6 +5,14 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Expense Splitter</title>
 	<style>
+		:root {
+			--primary: #4f46e5;
+			--primary-dark: #4338ca;
+			--bg: #f3f4f6;
+			--card-bg: #ffffff;
+			--text: #1f2937;
+			--border: #e5e7eb;
+		}
 		body {
 			font-family: Arial, sans-serif;
 			margin: 0;
@@ -53,7 +61,11 @@
 			margin: 0 0 1rem 0;
 		}
 		.group-item {
-			padding: 0.5rem 0;
+			padding: 10px;
+			background-color: var(--bg);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			cursor: pointer;
 			border-bottom: 1px solid #ddd;
 		}
 		.group-item:last-child {
@@ -72,7 +84,7 @@
 	</div>
 	<div class="group-list">
 		<h3>Your Groups</h3>
-		<div class="group-item">Group 1</div>
+		<div class="group-item" >Group 1</div>
 	</div>
 	<!--
 		ya group create garna milxa ane join ni garna milxa, ane afno group ni dekhauxa

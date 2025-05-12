@@ -3,37 +3,6 @@
 
 const express = require('express');
 const cors = require('cors');
-const corsOptions = {
-  origin: 'https://expense-splitter-tau.vercel.app', // Replace with your frontend's URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
-//------------------------------------------------------
-// Static assets
-//------------------------------------------------------
-const path = require('path');
-const app = express();
-
-const PORT = process.env.PORT || 3000;
-app.use(cors(corsOptions));          // adds the CORS headers to every reply
-app.options('*', cors(corsOptions));
-app.use(express.json());
-const PUBLIC_DIR = __dirname;          // <- key change
-
-app.use(express.static(PUBLIC_DIR));
-
-// Express 5 needs a *named* wildcard:
-app.get('/*splat', (_, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
-});
-
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
-
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const Datastore = require('nedb-promises');
@@ -48,7 +17,10 @@ const db = Datastore.create({ filename: 'mydb.jsonl', autoload: true });
 //------------------------------------------------------
 // Express setup
 //------------------------------------------------------
-
+const app = express();
+app.use(cors());
+app.use(express.json());
+const PORT = process.env.PORT || 3000;
 
 //------------------------------------------------------
 // Helper DB lookups
@@ -242,3 +214,72 @@ app.patch('/groupdelete/:groupId', async (req, res) => {
   }
 });
 
+//------------------------------------------------------
+// Static assets
+//------------------------------------------------------
+app.use(express.static('public'));
+
+//------------------------------------------------------
+// HTTP server so WebSocket can share the same port
+//------------------------------------------------------
+const server = http.createServer(app);
+
+//------------------------------------------------------
+// WebSocket setup (shares same HTTP server)
+//------------------------------------------------------
+// Connect using: ws://HOST:PORT/ws/<groupId>
+//------------------------------------------------------
+const wss = new WebSocket.Server({ server });
+
+const groupSockets = new Map(); // Map<groupId, Set<ws>>
+
+wss.on('connection', (ws, req) => {
+  // Extract the group ID from the URL
+  const urlParts = req.url.split('/');
+  const groupId = urlParts[urlParts.length - 1];
+  if (!groupId) {
+    ws.close(1008, 'Group ID is required in URL');
+    return;
+  }
+
+  // Track sockets per group
+  if (!groupSockets.has(groupId)) groupSockets.set(groupId, new Set());
+  groupSockets.get(groupId).add(ws);
+
+  // Broadcast helper
+  const broadcastToGroup = (msgObj) => {
+    const peers = groupSockets.get(groupId) || new Set();
+    const data = JSON.stringify(msgObj);
+    peers.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) client.send(data);
+    });
+  };
+
+  // Incoming messages
+  ws.on('message', (raw) => {
+    let msg;
+    try {
+      msg = JSON.parse(raw);
+    } catch (_) {
+      return; // Ignore malformed JSON
+    }
+    // Echo message to everyone in the same group
+    broadcastToGroup(msg);
+  });
+
+  // Remove closed sockets
+  ws.on('close', () => {
+    const set = groupSockets.get(groupId);
+    if (set) {
+      set.delete(ws);
+      if (set.size === 0) groupSockets.delete(groupId);
+    }
+  });
+});
+
+//------------------------------------------------------
+// Start the combined server
+//------------------------------------------------------
+server.listen(PORT, () => {
+  console.log(`HTTP & WebSocket server running on http://localhost:${PORT}`);
+});
