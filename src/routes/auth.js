@@ -3,73 +3,101 @@ const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const { db, findUserByEmail, findUserByUsername } = require('../db');
 const config = require('../config');
+const { generateTokens, verifyToken } = require('../middleware/jwtAuth');
+const { validate, registerRules, loginRules } = require('../middleware/validation');
+const { asyncHandler } = require('../middleware/errorHandler');
+const { authLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const isValidUsername = (username) => /^[a-zA-Z0-9_-]{3,30}$/.test(username);
-const sanitizeString = (str) => str?.toString().trim() || '';
+router.post(
+  '/register',
+  authLimiter,
+  registerRules,
+  validate,
+  asyncHandler(async (req, res) => {
+    const { username, email, password } = req.body;
 
-router.post('/register', async (req, res) => {
-  try {
-    const username = sanitizeString(req.body.username);
-    const email = sanitizeString(req.body.email).toLowerCase();
-    const password = req.body.password;
-
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+    const existingEmail = await findUserByEmail(email.toLowerCase());
+    if (existingEmail) {
+      return res.status(400).json({ success: false, message: 'Email already registered' });
     }
-
-    if (!isValidUsername(username)) {
-      return res.status(400).json({ message: 'Username must be 3-30 characters (letters, numbers, underscores, hyphens only - no spaces)' });
-    }
-
-    if (!isValidEmail(email)) {
-      return res.status(400).json({ message: 'Invalid email format' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters' });
-    }
-
-    const existingEmail = await findUserByEmail(email);
-    if (existingEmail) return res.status(400).json({ message: 'Email already registered' });
 
     const existingUsername = await findUserByUsername(username);
-    if (existingUsername) return res.status(400).json({ message: 'Username already taken' });
+    if (existingUsername) {
+      return res.status(400).json({ success: false, message: 'Username already taken' });
+    }
 
     const hashpassword = await bcrypt.hash(password, config.BCRYPT_ROUNDS);
     const userId = uuidv4();
 
-    await db.insert({ collection: 'users', id: userId, username, email, hashpassword });
-    res.status(201).json({ message: 'User registered successfully', userId });
-  } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
+    await db.insert({
+      collection: 'users',
+      id: userId,
+      username: username.trim(),
+      email: email.toLowerCase().trim(),
+      hashpassword,
+      createdAt: new Date().toISOString(),
+    });
 
-router.post('/login', async (req, res) => {
-  try {
-    const username = sanitizeString(req.body.username);
-    const password = req.body.password;
+    const tokens = generateTokens(userId);
 
-    if (!username || !password) {
-      return res.status(400).json({ message: 'Username and password are required' });
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      userId,
+      ...tokens,
+    });
+  })
+);
+
+router.post(
+  '/login',
+  authLimiter,
+  loginRules,
+  validate,
+  asyncHandler(async (req, res) => {
+    const { username, password } = req.body;
+
+    const user = await findUserByUsername(username.trim());
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    const user = await findUserByUsername(username);
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-
     const valid = await bcrypt.compare(password, user.hashpassword);
-    if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!valid) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
 
+    const tokens = generateTokens(user.id);
     const { hashpassword, ...safeUser } = user;
-    res.status(200).json({ message: 'Login successful', user: safeUser });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      user: safeUser,
+      ...tokens,
+    });
+  })
+);
+
+router.post(
+  '/refresh-token',
+  asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, message: 'Refresh token required' });
+    }
+
+    const decoded = verifyToken(refreshToken, config.JWT_REFRESH_SECRET);
+    if (!decoded || decoded.type !== 'refresh') {
+      return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+    }
+
+    const tokens = generateTokens(decoded.userId);
+    res.json({ success: true, ...tokens });
+  })
+);
 
 module.exports = router;

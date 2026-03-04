@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <style>
     .main-container {
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
       padding: 20px;
     }
@@ -25,10 +25,11 @@
       flex-direction: column;
       gap: 10px;
     }
-    .form-row input {
-      padding: 10px;
+    .form-row input, .form-row select {
+      padding: 10px 12px;
       border: 1px solid var(--border);
       border-radius: 8px;
+      font-size: 1rem;
     }
     .btn-group {
       display: flex;
@@ -41,32 +42,70 @@
       right: 20px;
       z-index: 100;
     }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .section-header h3 {
+      margin: 0;
+    }
+    .summary-text {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="main-container">
     <a href="home.html" class="back-link">
-      <img src="img/back.svg" width="20" height="20" alt="Back">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
       Back to Groups
     </a>
 
     <h2>Group Details</h2>
     <div class="group-header">
       <h1 id="gname">Loading...</h1>
-      <img src="img/edit.svg" id="edit-btn" class="icon-btn" width="28" height="28" title="Edit">
-      <img src="img/delete.svg" id="deleteExpenseButton" class="icon-btn" width="28" height="28" title="Delete">
+      <button class="icon-btn" id="edit-btn" title="Rename">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="deleteExpenseButton" title="Delete Group" style="color: var(--danger);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </button>
     </div>
 
     <div class="card">
-      <h3>Members</h3>
+      <h3>Members & Balances</h3>
       <ul id="users"></ul>
+    </div>
+
+    <div class="card">
+      <h3>Suggested Settlements</h3>
+      <ul id="settlementsList">
+        <li class="list-item skeleton" style="height: 40px;"></li>
+      </ul>
     </div>
 
     <div class="card">
       <h3>Add Expense</h3>
       <div class="form-row">
         <input type="text" id="expenseName" placeholder="Expense name" required>
-        <input type="number" id="expenseAmount" placeholder="Amount" step="0.01" required>
+        <div style="display: flex; gap: 10px;">
+          <input type="number" id="expenseAmount" placeholder="Amount" step="0.01" required style="flex: 1;">
+          <select id="expenseCategory" style="flex: 1;">
+            <option value="Other">Other</option>
+          </select>
+        </div>
         <div class="btn-group">
           <button id="addExpenseButton" class="btn">Add Expense</button>
           <button id="iPaidButton" class="btn btn-success">I Paid</button>
@@ -75,8 +114,14 @@
     </div>
 
     <div class="card">
-      <h3>Expenses</h3>
+      <div class="section-header">
+        <h3>Expenses</h3>
+        <button id="exportBtn" class="btn" style="padding: 6px 12px; font-size: 0.85rem;">
+          Export CSV
+        </button>
+      </div>
       <ul id="expensesList"></ul>
+      <div id="expenseSummary" class="summary-text"></div>
     </div>
 
     <button id="chatButton" class="btn chat-button">💬 Chat</button>
@@ -86,13 +131,14 @@
         <span id="closeChatModal" class="close">&times;</span>
         <h3>Group Chat</h3>
         <div id="chatMessages" class="chat-messages"></div>
-        <input type="text" id="chatInput" placeholder="Type a message..." class="form-group">
+        <input type="text" id="chatInput" placeholder="Type a message..." style="padding: 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;">
         <button id="sendChatButton" class="btn">Send</button>
       </div>
     </div>
   </div>
 
   <script src="js/auth.js"></script>
+  <script src="js/modal.js"></script>
   <script src="js/group-details.js"></script>
 </body>
 </html>
