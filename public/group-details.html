@@ -1,158 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Group Details</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Details - Expense Splitter</title>
+  <link rel="stylesheet" href="css/styles.css">
   <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-dark: #4338ca;
-      --bg: #f3f4f6;
-      --card-bg: #ffffff;
-      --text: #1f2937;
-      --border: #e5e7eb;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
+    .main-container {
+      max-width: 600px;
+      margin: 0 auto;
       padding: 20px;
     }
-
-    h1, h2, h3 {
-      color: var(--primary-dark);
-    }
-
-    #gname {
-      margin: 0px !important;
-    }
-
-    button {
-      padding: 10px 16px;
-      background-color: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background-color 0.3s ease;
-      margin: 5px 0;
-    }
-
-    button:hover {
-      background-color: var(--primary-dark);
-    }
-
-
-    .card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-
-    ul {
-      list-style-type: none;
-      padding: 0;
-    }
-
-    #users li, #expensesList li {
-      background-color: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 8px;
-      transition: transform 0.2s ease;
-    }
-
-    #users li:hover, #expensesList li:hover {
-      transform: translateY(-2px);
-    }
-
-    .form-container input {
-      padding: 10px;
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 12px;
-      box-sizing: border-box;
-    }
-
-    .form-container {
+    .group-header {
       display: flex;
-      flex-direction: column;
-    }
-    .main-div{
-      margin: auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      @media screen and (min-width: 768px) {
-        width: 50%;      
-      }
-    }
-    #edit-btn, #deleteExpenseButton{
-      cursor: pointer;
-      
-    }
-    #edit-btn:hover, #deleteExpenseButton:hover{
-      transform: scale(1.1);
-    }
-    .group-div{
-      display: flex;
+      align-items: center;
       gap: 1rem;
-      align-items:  center;
       margin-bottom: 20px;
+    }
+    .group-header h1 {
+      margin: 0;
+    }
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .form-row input {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .chat-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
-  <div class = "main-div">
-  <h1>Group Details</h1>
-  <div class="group-div">
-  <h1 id="gname">Group Name</h1>
-    <img src="./img/edit.svg" id = "edit-btn" width="32px" height="32px" title="Edit" />
-    <img src="./img/delete.svg" id = "deleteExpenseButton" width="32px" height="32px"  title="Delete"/>
-  </div>
+  <div class="main-container">
+    <a href="home.html" class="back-link">
+      <img src="img/back.svg" width="20" height="20" alt="Back">
+      Back to Groups
+    </a>
 
-  <div class="card">
-    <h2>Users</h2>
-    <ul id="users"></ul>
-  </div>
+    <h2>Group Details</h2>
+    <div class="group-header">
+      <h1 id="gname">Loading...</h1>
+      <img src="img/edit.svg" id="edit-btn" class="icon-btn" width="28" height="28" title="Edit">
+      <img src="img/delete.svg" id="deleteExpenseButton" class="icon-btn" width="28" height="28" title="Delete">
+    </div>
 
-  <div class="card form-container">
-    <h3>Add Expense</h3>
-    <input type="text" id="expenseName" placeholder="Expense Name" required>
-    <input type="number" id="expenseAmount" placeholder="Amount" required>
-    <button id="addExpenseButton">Add Expense</button>
-    <button id="iPaidButton">I Paid</button>
-  </div>
+    <div class="card">
+      <h3>Members</h3>
+      <ul id="users"></ul>
+    </div>
 
-  <div class="card">
+    <div class="card">
+      <h3>Add Expense</h3>
+      <div class="form-row">
+        <input type="text" id="expenseName" placeholder="Expense name" required>
+        <input type="number" id="expenseAmount" placeholder="Amount" step="0.01" required>
+        <div class="btn-group">
+          <button id="addExpenseButton" class="btn">Add Expense</button>
+          <button id="iPaidButton" class="btn btn-success">I Paid</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <h3>Expenses</h3>
       <ul id="expensesList"></ul>
-  </div>
-  
-  <!-- Chat Button -->
-  <button id="chatButton" class="chat-button">💬 Chat</button>
-  
-  <!-- Chat Modal -->
-  <div id="chatModal" class="chat-modal">
+    </div>
+
+    <button id="chatButton" class="btn chat-button">💬 Chat</button>
+
+    <div id="chatModal" class="chat-modal">
       <div class="chat-modal-content">
-          <span id="closeChatModal" class="close">&times;</span>
-          <h3>Group Chat</h3>
-          <div id="chatMessages" class="chat-messages"></div>
-          <input type="text" id="chatInput" placeholder="Type a message..." />
-          <button id="sendChatButton">Send</button>
+        <span id="closeChatModal" class="close">&times;</span>
+        <h3>Group Chat</h3>
+        <div id="chatMessages" class="chat-messages"></div>
+        <input type="text" id="chatInput" placeholder="Type a message..." class="form-group">
+        <button id="sendChatButton" class="btn">Send</button>
       </div>
+    </div>
   </div>
 
-  <script src="groupdetail.js"></script>
-</div>
+  <script src="js/auth.js"></script>
+  <script src="js/group-details.js"></script>
 </body>
 </html>

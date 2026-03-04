@@ -1,17 +1,25 @@
 {
   "name": "expense-splitter",
   "version": "1.0.0",
-  "description": "final project",
-  "main": "index.js",
+  "description": "Expense splitting application for groups",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "author": "aashish-joshi",
   "license": "MIT",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
     "express": "^5.1.0",
+    "helmet": "^8.1.0",
     "nedb-promises": "^6.2.3",
     "uuid": "^11.1.0",
     "ws": "^8.18.2"
